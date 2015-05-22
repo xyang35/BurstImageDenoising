@@ -8,7 +8,7 @@ imageNum = 10;
 imageSet = cell(1, imageNum);
 
 base_dir = '../burstimages_v1/';
-name = 'Bookshelf_2';
+name = 'Bookshelf_1';
 path = [base_dir, name];
 result_path = ['/localdisk/xyang/PS_data/', name];
 
@@ -179,6 +179,8 @@ sigma2 = computeSigma2FromDiffVector(fineGrayScaleRefImage(inds) - fineMedianIma
 % second perform temporal fusion
 baseConsistentPixelMapR = ConsistentPixelMap(:,:,:,1) .* baseConsistentPixelMap;
 baseConsistentPixelMapC = ConsistentPixelMap(:,:,:,2) .* baseConsistentPixelMap;
+baseConsistentPixelMapR(:,:,ref) = 1;
+baseConsistentPixelMapC(:,:,ref) = 1;
 sigmat2MapSet = cell(1,length(refPyramid));
 for level = 1 : length(refPyramid)
     rows = size(refPyramid{level}, 1);
@@ -293,9 +295,9 @@ for level = 2 : length(refPyramid)
             sigmat2 = mean((spatialConsistentPixels - sqrt(mean(meanVal.^2, 3))).^2);
             sigmac2 = max(0, sigmat2 - sigma2);
             levelSpatiallyFilteredImage(r,c,:) = meanVal + sigmac2 / (sigmac2 + sigma2) * (levelSpatiallyFilteredImage(r,c,:) - meanVal);
-            
+
             if isnan(levelSpatiallyFilteredImage(r,c,3))
-                break;
+                return
             end
         end
     end

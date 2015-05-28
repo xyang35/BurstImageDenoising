@@ -28,9 +28,10 @@ homographyPyramid = refineHomographyPyramid(homographyPyramid);
 
 % fifth, discretize homography to create homography flow
 homographyLevel = homographyPyramid{length(homographyPyramid)};
+%load('homographyLevel.mat');
 imageLevel = pyramid{length(homographyPyramid)};
-homographyFlow = discretizeAndGroupImageHomography(...
-    homographyLevel, size(homographyLevel, 1), size(homographyLevel, 2), size(imageLevel, 1), size(imageLevel, 2));
+%homographyFlow = discretizeAndGroupImageHomography_old(homographyLevel, size(homographyLevel, 1), size(homographyLevel, 2), size(imageLevel, 1), size(imageLevel, 2));
+homographyFlow = discretizeAndGroupImageHomography(homographyLevel, size(homographyLevel, 1), size(homographyLevel, 2), size(imageLevel, 1), size(imageLevel, 2));
 
 homographyFlowPyramid = cell(1, length(homographyPyramid));
 homographyFlowPyramid{length(homographyPyramid)} = homographyFlow;

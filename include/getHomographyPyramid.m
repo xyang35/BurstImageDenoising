@@ -17,7 +17,7 @@ for level = 1:layerNum
                 temp = homographyPyramid{level - 1};
                 homographies(r,c) = {temp(r_upper, c_upper).homographies};
             else
-                [tform,inlierPts1,inlierPts2] = estimateGeometricTransform(nodes1{r,c}.pts, nodes2{r,c}.pts, 'projective');
+                [tform,inlierPts1,~] = estimateGeometricTransform(nodes1{r,c}.pts, nodes2{r,c}.pts, 'projective');
                 homographies(r,c) = {tform.T};
             end
         end

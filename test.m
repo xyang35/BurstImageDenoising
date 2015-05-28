@@ -7,7 +7,7 @@ imageNum = 10;
 ref = 5;    % set the reference image to be the 5th one
 
 base_dir = '../burstimages_v1/';
-name = 'Bookshelf_2';
+%name = 'Bookshelf_1';
 path = [base_dir, name];
 result_path = ['/localdisk/xyang/PS_data/', name];
 
@@ -46,10 +46,11 @@ for i = 1 : length(imageSet)
     end
     Level1GrayImageSet(:,:,i) = rgb2gray(pyramid{CONSISTLEVEL});
     disp(['homography ', num2str(i), ' complete']);
-    %return
 end
 
-%save([result_path, '_h_norefine.mat'], 'homographyFlowPyramidSet');
+%load([result_path, '_h_fix2.mat']);
+save([result_path, '_h_fix12.mat'], 'homographyFlowPyramidSet');
+%return
 
 
 %% Consistent pixel
@@ -57,7 +58,7 @@ end
 tau = 10; % threshold for selecting consistent pixels
 
 % compute median image of all consistent level images (for median value based consistent pixel selection)
-[ConsistentImageSet, ConsistentPixelMap] = getConsistentImageSet(Level1GrayImageSet, homographyFlowPyramidSet{CONSISTLEVEL});
+[ConsistentImageSet, ~] = getConsistentImageSet(Level1GrayImageSet, homographyFlowPyramidSet{CONSISTLEVEL});
 MedianImage = median(ConsistentImageSet, 3);
 IntegralMedImage = integralImage(MedianImage); % integral image of the median image
 % integral images of all consistent level images
@@ -133,28 +134,30 @@ for r = 1 : rows
 end
 
 % combine median consistent pixels and reference consistent pixels
-ConsistentPixelMap = zeros(size(RefConsistentPixelMap));
-reliableNumber = floor(imageNum / 2);
-consistentPixelNumMap = sum(MedConsistentPixelMap, 3);
-consistentPixelNumMap = consistentPixelNumMap > reliableNumber;
-% perform majority filter
-consistentPixelNumMap = bwmorph(consistentPixelNumMap, 'majority');
 
-for r = 1 : rows
-    for c = 1 : cols
-        % case 1: union of the two
-        if MedConsistentPixelMap(r,c,ref) == 1
-            ConsistentPixelMap(r,c,:) = RefConsistentPixelMap(r,c,:) | MedConsistentPixelMap(r,c,:);
-        % case 2: judge if median based is reliable
-        elseif consistentPixelNumMap(r,c) == 1
-            % median based result is reliable
-            ConsistentPixelMap(r,c,:) = MedConsistentPixelMap(r,c,:);
-        else
-            % median based result is not reliable
-            ConsistentPixelMap(r,c,:) = RefConsistentPixelMap(r,c,:);
-        end
-    end
-end
+ConsistentPixelMap = Combine_strategy(RefConsistentPixelMap, MedConsistentPixelMap, ref);
+%ConsistentPixelMap = zeros(size(RefConsistentPixelMap));
+%reliableNumber = floor(imageNum / 2);
+%consistentPixelNumMap = sum(MedConsistentPixelMap, 3);
+%consistentPixelNumMap = consistentPixelNumMap > reliableNumber;
+%% perform majority filter
+%consistentPixelNumMap = bwmorph(consistentPixelNumMap, 'majority');
+%
+%for r = 1 : rows
+%    for c = 1 : cols
+%        % case 1: union of the two
+%        if MedConsistentPixelMap(r,c,ref) == 1
+%            ConsistentPixelMap(r,c,:) = RefConsistentPixelMap(r,c,:) | MedConsistentPixelMap(r,c,:);
+%        % case 2: judge if median based is reliable
+%        elseif consistentPixelNumMap(r,c) == 1
+%            % median based result is reliable
+%            ConsistentPixelMap(r,c,:) = MedConsistentPixelMap(r,c,:);
+%        else
+%            % median based result is not reliable
+%            ConsistentPixelMap(r,c,:) = RefConsistentPixelMap(r,c,:);
+%        end
+%    end
+%end
 
 sumConsistentPixelMap = sum(ConsistentPixelMap, 3);
 [rs, cs] = find(sumConsistentPixelMap == 0);
@@ -171,10 +174,6 @@ for level = 1 : length(refPyramid)
         AllConsistentPixelMap{level} = imresize(ConsistentPixelMap, [rows, cols], 'near');
     end
 end
-
-% for i = 1 : size(baseConsistentPixelMap,3)
-%     baseConsistentPixelMap(:, :, i) = bwmorph(baseConsistentPixelMap(:, :, i), 'majority');
-% end
 
 %% fusion stage
 
@@ -338,4 +337,4 @@ for level = 2 : length(refPyramid)
         + (1 - omegaMap) .* imresize(refPyramid{level - 1}, [size(refPyramid{level},1), size(refPyramid{level},2)], 'bilinear');
 end
 
-imwrite(uint8(refPyramid{length(refPyramid)}), [result_path,'_fixbug34.png']);
+imwrite(uint8(refPyramid{length(refPyramid)}), [result_path,'_fixbug1345.png']);

@@ -17,8 +17,7 @@ for r = 1 : nodeRows
             cEnd = imageCols;
         end
         nodeHomographyFLow = discretizeHomography(homography, [rStart rEnd], [cStart cEnd]);
-        homographyFlow(rStart : rEnd, cStart : cEnd, :) = nodeHomographyFLow(rStart : rEnd, cStart : cEnd, :);
-%        homographyFlow(rStart:rEnd, cStart:cEnd, :) = nodeHomographyFLow;
+        homographyFlow(rStart:rEnd, cStart:cEnd, :) = nodeHomographyFLow;
     end
 end
 end
@@ -32,15 +31,16 @@ function homographyFLow = discretizeHomography(homography, rows, cols)
 %  g h i];
 homographyFLow = zeros(rows(2) - rows(1) + 1, cols(2) - cols(1) + 1, 2);
 %
-for x = cols(1) : cols(2)
-    for y = rows(1) : rows(2)
-%for x = 1 : cols(2)-cols(1)+1
-%    for y = 1 : rows(2)-rows(1)+1
-        pt = [x, y, 1];
+x = cols(1) : cols(2);
+y = rows(1) : rows(2);
+
+for i = 1 : length(x)
+    for j = 1 : length(y)
+        pt = [x(i), y(j), 1];
         pt_ = pt * homography;
         pt_ = pt_ / pt_(3);
-        homographyFLow(y, x, 1) = pt_(1) - pt(1);
-        homographyFLow(y, x, 2) = pt_(2) - pt(2);
+        homographyFLow(j, i, 1) = pt_(1) - pt(1);
+        homographyFLow(j, i, 2) = pt_(2) - pt(2);
     end
 end
 end

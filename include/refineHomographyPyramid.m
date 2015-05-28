@@ -56,7 +56,7 @@ for level = 2:layerNum
     A = eye(num * 9, num * 9) + lambda / 2 * (D' * D);
     b = R;
     
-    H = inv(A) * b;
+    H = A \ b;
     for r = 1 : rows
         for c = 1 : cols
             ind = (r - 1) * cols + c;

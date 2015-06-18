@@ -1,7 +1,7 @@
-function homographyPyramid = getHomographyPyramid(pyramid, matchedPoints1, matchedPoints2)
+function homographyPyramid = getHomographyPyramid(pyramid, matchedPoints1, matchedPoints2, FEATURELEVEL)
 % Compute homography pyramid from matched feature points
-featuredPyramid1 = getFeaturedPyramid(pyramid, matchedPoints1);
-featuredPyramid2 = getFeaturedPyramidWithRef(pyramid, matchedPoints2, featuredPyramid1);
+featuredPyramid1 = getFeaturedPyramid(pyramid, matchedPoints1, matchedPoints2, FEATURELEVEL);
+featuredPyramid2 = getFeaturedPyramidWithRef(pyramid, matchedPoints1, matchedPoints2, featuredPyramid1, FEATURELEVEL);
 [~, layerNum] = size(pyramid);
 homographyPyramid = cell(1, layerNum);
 for level = 1:layerNum
@@ -28,45 +28,26 @@ for level = 1:layerNum
 end
 end
 
-function featuredPyramid = getFeaturedPyramidWithRef(pyramid, pts, refFeaturedPyramid)
-[~, layerNum] = size(pyramid);
-featuredPyramid = cell(1, layerNum);
-for level = 1:layerNum
-    rows = 2 ^ (level - 1);
-    cols = rows;
-    multi = rows;
-    nodes = cell(rows, cols);
-    refNodes = refFeaturedPyramid{level};
-    % node: range, featurePoints, homography
-    nodePixelNumVert = floor(size(pyramid{level}, 1) / multi);
-    nodePixelNumHori = floor(size(pyramid{level}, 2) / multi);
-    newPts = pts;
-    newPts.Scale = newPts.Scale * multi;
-    newPts.Location = newPts.Location * multi;
-    for r = 1 : rows
-        for c = 1 : cols
-            range = [1 + (c - 1) * nodePixelNumHori, c * nodePixelNumHori; 1 + (r - 1) * nodePixelNumVert, r * nodePixelNumVert];
-            refNode = refNodes{r,c};
-            node = ImageNode(range, newPts(refNode.inds), refNode.inds);
-            nodes(r,c) = {node};
-        end
-    end
-    featuredPyramid(level) = {nodes};
-end
-end
+function featuredPyramid = getFeaturedPyramid(pyramid, pts1, pts2, FEATURELEVEL)
+% reuse the matched features through upsampling or downsampling
 
-function featuredPyramid = getFeaturedPyramid(pyramid, pts)
 [~, layerNum] = size(pyramid);
 featuredPyramid = cell(1, layerNum);
+feat_rows = 2 ^ (FEATURELEVEL - 1);
+
 for level = 1:layerNum
     rows = 2 ^ (level - 1);
     cols = rows;
-    multi = rows;
+    multi = rows / feat_rows;
     nodes = cell(rows, cols);
     % node: range, featurePoints, homography
-    nodePixelNumVert = floor(size(pyramid{level}, 1) / multi);
-    nodePixelNumHori = floor(size(pyramid{level}, 2) / multi);
-    newPts = pts;
+    nodePixelNumVert = floor(size(pyramid{level}, 1) / rows);
+    nodePixelNumHori = floor(size(pyramid{level}, 2) / cols);
+    %newPts = pts;
+
+    % if scale constraint is violated, then remove the points
+    newPts = pts1(pts1.Scale*multi>=1.6 & pts2.Scale*multi>=1.6);
+
     newPts.Scale = newPts.Scale * multi;
     newPts.Location = newPts.Location * multi;
     for r = 1 : rows
@@ -86,6 +67,41 @@ for level = 1:layerNum
     featuredPyramid(level) = {nodes};
 end
 end
+
+function featuredPyramid = getFeaturedPyramidWithRef(pyramid, pts1, pts2, refFeaturedPyramid, FEATURELEVEL)
+
+[~, layerNum] = size(pyramid);
+featuredPyramid = cell(1, layerNum);
+feat_rows = 2 ^ (FEATURELEVEL - 1);
+
+for level = 1:layerNum
+    rows = 2 ^ (level - 1);
+    cols = rows;
+    multi = rows / feat_rows;
+    nodes = cell(rows, cols);
+    refNodes = refFeaturedPyramid{level};
+    % node: range, featurePoints, homography
+    nodePixelNumVert = floor(size(pyramid{level}, 1) / rows);
+    nodePixelNumHori = floor(size(pyramid{level}, 2) / cols);
+    %newPts = pts;
+
+    % if scale constraint is violated, then remove the points
+    newPts = pts2(pts1.Scale*multi>=1.6 & pts2.Scale*multi>=1.6);
+    newPts.Scale = newPts.Scale * multi;
+    newPts.Location = newPts.Location * multi;
+    for r = 1 : rows
+        for c = 1 : cols
+            range = [1 + (c - 1) * nodePixelNumHori, c * nodePixelNumHori; 1 + (r - 1) * nodePixelNumVert, r * nodePixelNumVert];
+            refNode = refNodes{r,c};
+            node = ImageNode(range, newPts(refNode.inds), refNode.inds);
+            nodes(r,c) = {node};
+        end
+    end
+    featuredPyramid(level) = {nodes};
+end
+end
+
+
 
 function flag = inRange(range, pt)
 flag = false;

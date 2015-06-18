@@ -6,12 +6,12 @@ addpath(genpath('./include'));
 imageNum = 10;
 ref = 5;    % set the reference image to be the 5th one
 
-base_dir = '../burstimages_v1/';
-%name = 'Bookshelf_1';
+base_dir = '/localdisk/xyang/PS_data/burstimages_v1/';
+name = 'Bookshelf_2';
 path = [base_dir, name];
+%path2 = [base_dir, name, '_crop'];
 result_path = ['/localdisk/xyang/PS_data/', name];
 
-CONSISTLEVEL = 2;    % consistent pixels are selected at level 1 (not base level, i.e., level 0)
 
 % import burst of images
 imageSet = cell(1, imageNum);
@@ -19,10 +19,17 @@ ratio = 1;
 for i = 1 : imageNum
     image_dir = fullfile(path, [num2str(i - 1), '.jpg']);
     imageSet{i} = imresize(imread(image_dir), ratio);
+%     crop = imageSet{i}(400:1300, :, :);
+%     imwrite(crop, fullfile(path2, [num2str(i-1), '.jpg']), 'jpg');
 end
 refImage = imageSet{ref}; % get reference image
 refPyramid = getPyramids(refImage); % get pyramid for reference image
-[refFeatures, refPoints] = getFeatures(refPyramid{1}); % get features and valid points of reference image
+
+% scale level (s=1) is obtained after one down-sampling operation
+PyHeight = length(refPyramid);
+FEATURELEVEL = PyHeight - 1;
+CONSISTLEVEL = PyHeight - 1;
+[refFeatures, refPoints] = getFeatures(refPyramid{FEATURELEVEL}, FEATURELEVEL); % get features and valid points of reference image
 
 %% Homography flows
 
@@ -31,26 +38,27 @@ homographyFlowPyramidSet = cell(1, length(refPyramid));
 for j = 1 : length(refPyramid)
     homographyFlowPyramidSet{j} = cell(1,length(imageSet));
 end
-% record Level 1 gray scale image set for consistent pixel selection
-Level1GrayImageSet = zeros(size(refPyramid{CONSISTLEVEL}, 1), size(refPyramid{CONSISTLEVEL}, 2), length(imageSet));
+% record scale 1 gray scale image set for consistent pixel selection
+Scale1GrayImageSet = zeros(size(refPyramid{CONSISTLEVEL}, 1), size(refPyramid{CONSISTLEVEL}, 2), length(imageSet));
 
 for i = 1 : length(imageSet)
     if i == ref
-        Level1GrayImageSet(:,:,i) = rgb2gray(refPyramid{CONSISTLEVEL});
+        Scale1GrayImageSet(:,:,i) = rgb2gray(refPyramid{CONSISTLEVEL});
         continue;
     end
     pyramid = getPyramids(imageSet{i});
-    homographyFlowPyramid = getHomographyFlowPyramidWithRefFeatures(refPyramid, refFeatures, refPoints, pyramid);
+    [homographyFlowPyramid, homographyPyramid] = getHomographyFlowPyramidWithRefFeatures(refPyramid, refFeatures, refPoints, pyramid, FEATURELEVEL);
     for j = 1 : length(homographyFlowPyramid)
         homographyFlowPyramidSet{j}{i} = homographyFlowPyramid{j};
     end
-    Level1GrayImageSet(:,:,i) = rgb2gray(pyramid{CONSISTLEVEL});
+    Scale1GrayImageSet(:,:,i) = rgb2gray(pyramid{CONSISTLEVEL});
     disp(['homography ', num2str(i), ' complete']);
 end
 
-%load([result_path, '_h_fix2.mat']);
-save([result_path, '_h_fix12.mat'], 'homographyFlowPyramidSet');
-%return
+%load([result_path, '_h_fix12.mat']);
+%homographyflow = homographyFlowPyramidSet{end};
+save([result_path, '_hnew_fix12.mat'], 'homographyFlowPyramidSet', '-v7.3');
+return
 
 
 %% Consistent pixel
@@ -58,13 +66,13 @@ save([result_path, '_h_fix12.mat'], 'homographyFlowPyramidSet');
 tau = 10; % threshold for selecting consistent pixels
 
 % compute median image of all consistent level images (for median value based consistent pixel selection)
-[ConsistentImageSet, ~] = getConsistentImageSet(Level1GrayImageSet, homographyFlowPyramidSet{CONSISTLEVEL});
+[ConsistentImageSet, ~] = getConsistentImageSet(Scale1GrayImageSet, homographyFlowPyramidSet{CONSISTLEVEL});
 MedianImage = median(ConsistentImageSet, 3);
 IntegralMedImage = integralImage(MedianImage); % integral image of the median image
 % integral images of all consistent level images
 IntegralImageSet = zeros(size(refPyramid{CONSISTLEVEL}, 1) + 1, size(refPyramid{CONSISTLEVEL}, 2) + 1, length(imageSet));
 for i = 1 : length(imageSet)
-    IntegralImageSet(:, :, i) = integralImage(Level1GrayImageSet(:, :, i));
+    IntegralImageSet(:, :, i) = integralImage(Scale1GrayImageSet(:, :, i));
 end
 
 % integral images of all consistent images
@@ -74,8 +82,8 @@ for i = 1 : size(ConsistentIntegralImageSet,3)
 end
 
 % set of consistent pixel indexes: reference based and median based
-RefConsistentPixelMap = zeros(size(Level1GrayImageSet));
-MedConsistentPixelMap = zeros(size(Level1GrayImageSet));
+RefConsistentPixelMap = zeros(size(Scale1GrayImageSet));
+MedConsistentPixelMap = zeros(size(Scale1GrayImageSet));
 halfWidth = 2; halfHeight = 2;    % for patch implementation
 rows = size(RefConsistentPixelMap, 1);
 cols = size(RefConsistentPixelMap, 2);
@@ -337,4 +345,4 @@ for level = 2 : length(refPyramid)
         + (1 - omegaMap) .* imresize(refPyramid{level - 1}, [size(refPyramid{level},1), size(refPyramid{level},2)], 'bilinear');
 end
 
-imwrite(uint8(refPyramid{length(refPyramid)}), [result_path,'_fixbug1345.png']);
+imwrite(uint8(refPyramid{length(refPyramid)}), [result_path,'_new_fix12.png']);

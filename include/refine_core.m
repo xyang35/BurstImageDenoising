@@ -13,7 +13,7 @@ count_record = zeros(num, 1);
 for r = 1 : rows
     for c = 1 : cols
         cur_ind = (r-1) * cols + c;
-        homography = homographyLevel(r,c).homographies;
+        homography = homographyLevel(r,c).homographies.T;
         R(:,:,cur_ind) = homography;
         
         count = 0;
@@ -59,7 +59,7 @@ end
 for r = 1 : rows
     for c = 1 : cols
         ind = (r - 1) * cols + c;
-        homographyLevel(r,c).homographies = H(:,:,ind);
+        homographyLevel(r,c).homographies.T = H(:,:,ind);
     end
 end
 

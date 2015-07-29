@@ -18,12 +18,14 @@ for level = 1:layerNum
                 homographies(r,c) = {temp(r_upper, c_upper).homographies};
             else
                 [tform,inlierPts1,~] = estimateGeometricTransform(nodes1{r,c}.pts, nodes2{r,c}.pts, 'projective');
-                homographies(r,c) = {tform.T};
+                %homographies(r,c) = {tform.T};
+                homographies{r, c} = tform;
             end
         end
     end
-    pointNum = length(inlierPts1);
-    current = struct('homographies', homographies, 'pointNumber', pointNum);
+    %pointNum = length(inlierPts1);
+    %current = struct('homographies', homographies, 'pointNumber', pointNum);
+    current = struct('homographies', homographies);
     homographyPyramid(level) = {current};
 end
 end

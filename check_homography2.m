@@ -5,7 +5,8 @@ addpath(genpath('./include'));
 imageNum = 10;
 ref = 5;    % set the reference image to be the 5th one
 
-base_dir = '/localdisk/xyang/PS_data/burstimages_v1/';
+%base_dir = '/localdisk/xyang/PS_data/burstimages_v1/';
+base_dir ='./';
 name1 = 'Bookshelf_2';
 image_path = [base_dir, name1];
 
@@ -21,11 +22,13 @@ end
 [rows, cols] = size(imageSet{5});
 
 % load homography flow
-version = 'fix12';
+%version = 'fix12';
 %version = 'ori';
-name2 = [name1, '_hnew_', version, '.mat'];
-homography_path = ['/localdisk/xyang/PS_data/', name2];
+%name2 = [name1, '_hnew_', version, '.mat'];
+%homography_path = ['/localdisk/xyang/PS_data/', name2];
+homography_path = ['result/', name1, '_refined.mat'];
 load(homography_path);
+return
 
 % inverse transform
 TransferSet = uint8(zeros(rows, cols, imageNum));

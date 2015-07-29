@@ -4,8 +4,8 @@ minRows = 400;
 minCols = 400;
 [rows, cols, ~] = size(image);
 layerNum = 1;
-%while rows > minRows && cols > minCols
-while rows > minRows || cols > minCols    % fix bug 1
+while rows > minRows && cols > minCols
+%while rows > minRows || cols > minCols    % fix bug 1
     layerNum = layerNum + 1;
     rows = ceil(rows / 2);
     cols = ceil(cols / 2);

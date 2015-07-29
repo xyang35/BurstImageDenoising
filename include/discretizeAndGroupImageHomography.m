@@ -5,7 +5,7 @@ rowsPerNode = floor(imageRows / nodeRows);
 colsPerNode = floor(imageCols / nodeCols);
 for r = 1 : nodeRows
     for c = 1 : nodeCols
-        homography = homographySet(r, c).homographies;
+        homography = homographySet(r, c).homographies.T;
         rStart = (r - 1) * rowsPerNode + 1;
         rEnd = r * rowsPerNode;
         if r == nodeRows

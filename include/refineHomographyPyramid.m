@@ -10,12 +10,12 @@ for level = 2:layerNum
     D = zeros(num * 4 * 9, num * 9);
     for r = 1 : rows
         for c = 1 : cols
-            homography = homographyLevel(r,c).homographies;
-            pointNumber = homographyLevel(r,c).pointNumber;
-            if pointNumber < 8 && level > 1
-                upperLevel = homographyPyramid{level - 1};
-                homography = upperLevel(ceil(r / 2), ceil(c / 2)).homographies;
-            end
+            homography = homographyLevel(r,c).homographies.T;
+            %pointNumber = homographyLevel(r,c).pointNumber;
+            %if pointNumber < 8 && level > 1
+                %upperLevel = homographyPyramid{level - 1};
+                %homography = upperLevel(ceil(r / 2), ceil(c / 2)).homographies.T;
+            %end
             R = [R; homography(:)];
             cur_ind = (r - 1) * cols + c;
             % determine neighbors
@@ -60,7 +60,7 @@ for level = 2:layerNum
     for r = 1 : rows
         for c = 1 : cols
             ind = (r - 1) * cols + c;
-            homographyLevel(r,c).homographies = reshape(H((ind - 1) * 9 + 1: ind * 9), 3, 3);
+            homographyLevel(r,c).homographies.T = reshape(H((ind - 1) * 9 + 1: ind * 9), 3, 3);
         end
     end
     

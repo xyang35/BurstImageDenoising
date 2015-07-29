@@ -26,8 +26,8 @@ homographyPyramid = getHomographyPyramid(refPyramid, matchedPts1, matchedPts2, F
 
 % forth, refine homography
 %homographyPyramid_old = homographyPyramid;
-%homographyPyramid = refineHomographyPyramid(homographyPyramid);
-homographyPyramid = refineHomographyPyramid_v2(homographyPyramid);
+homographyPyramid = refineHomographyPyramid(homographyPyramid);
+%homographyPyramid = refineHomographyPyramid_v2(homographyPyramid);
 
 % fifth, discretize homography to create homography flow
 homographyLevel = homographyPyramid{length(homographyPyramid)};
